@@ -1,0 +1,115 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2 - Payment References"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: payment-references
+  description: Get the payment reference to include on a payment when funding by bank transfer
+
+paths:
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|             PAYMENT REFERENCES           |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/payment-references/':
+        get:
+            summary: "The payment reference to include on a payment when funding by bank transfer"
+            description: "Get the payment refernece to include on a payment when funding by bank transfer. Can be used for funding different types of resources, for example an individual transfer or in future a batch of transfers."
+            operationId: "get-payment-references"
+            tags:
+            - payment-references
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "resourceType"
+              in: "query"
+              description: "The type of resource to get payment references for. Currently only supports transfers."
+              required: true
+              type: string
+              enum:
+                - transfer
+            - name: "resourceId"
+              in: "query"
+              description: "The ID of the resource to get payment refernces for, should represent a resource of type `resourceType`"
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Payment reference options"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Payment-Reference"
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
+definitions:
+    Payment-Reference:
+        type: object
+        properties:
+            strategyName:
+              type: string
+              enum:
+              - user
+              - profile
+              - transfer
+              description: Unique key to refer to this payment refernece strategy. Used when the client knows exactly the strategy they wish to use.
+            accuracy:
+              type: integer
+              format: int64
+              description: The accuracy of the payment reference. Where a client sends payments programtically they should always select the most accurate method.
+              example: 100
+            reference:
+              type: string
+              description: The payment reference to send on the bank transfer.
+              example: "P123456"
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: "Error code"
+            message:
+                description: "Human readable error message"
+                type: string
+            arguments:
+                description: "Error arguments"
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+        required:
+        - "errors"
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"

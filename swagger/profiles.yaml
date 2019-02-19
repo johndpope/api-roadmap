@@ -1,0 +1,338 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2 - Profiles"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: profiles
+  description: Customer Profiles
+
+paths:
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                 PROFILES                 |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/profiles/':
+        post:
+            summary: "Create new profile"
+            description: "|
+        Creates a new profile. One can have many business profiles but only one personal profile."
+            operationId: "create-profile"
+            tags:
+            - profiles
+            consumes:
+            - "application/json; version=2"
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "body"
+              in: "body"
+              description: "Profile payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/CreateProfilePayload"
+            responses:
+                200:
+                    description: "Profile created"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        get:
+            summary: "List accessible profiles"
+            description: "Returns the list of profiles accessible to the current user."
+            operationId: "list-profiles"
+            tags:
+            - profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            responses:
+                200:
+                    description: "Accessible profiles"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Profile"
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+    '/profiles/{id}':
+        get:
+            summary: "Show profile"
+            description: "Returns the profile with the specified Id if it exists and it is accessible to the current user"
+            operationId: "show-profile"
+            tags:
+            - profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the profile."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Identified Profile"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        patch:
+            summary: "Update profile"
+            description: "Updates the profile with the specified Id with the allowed data."
+            operationId: "update-profile"
+            tags:
+            - profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the profile."
+              required: true
+              type: "integer"
+              format: "int64"
+            - name: "body"
+              in: "body"
+              description: "Update profile payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/UpdateProfilePayload"
+            responses:
+                200:
+                    description: "Identified Profile"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
+definitions:
+    IdentifiableViaLong:
+        type: "object"
+        properties: &IdentifiableViaLong
+            id:
+                type: integer
+                format: int64
+                description: Object id number
+    Name:
+        type: object
+        properties:
+            familyName:
+                type: string
+            fullName:
+                type: string
+            givenName:
+                type: string
+            middleNames:
+                type: array
+                items:
+                    type: string
+            patronymicName:
+                type: string
+    Details:
+        type: object
+        properties:
+            firstName:
+                type: string
+                description: First name of the customer
+            lastName:
+                type: string
+                description: Last name of the customer
+            dateOfBirth:
+                type: string
+                format: date
+                description: Customer's date of birth
+            phoneNumber:
+                type: string
+                description: Phone number
+            name:
+                description: Business name
+                type: string
+            registrationNumber:
+                description: Business registration number
+                type: string
+            acn:
+                description: Australian Company Number (only for AUS businesses)
+                type: string
+            abn:
+                description: Australian Business Nnumber (only for AUS businesses)
+                type: string
+            arbn:
+                description: Australian Registered Body Number (only for AUS businesses)
+                type: string
+            companyType:
+                description: Company legal form
+                type: string
+                enum:
+                - LIMITED
+                - PARTNERSHIP
+                - SOLE_TRADER
+                - LIMITED_BY_GUARANTEE
+                - LIMITED_LIABILITY_COMPANY
+                - FOR_PROFIT_CORPORATION
+                - NON_PROFIT_CORPORATION
+                - LIMITED_PARTNERSHIP
+                - LIMITED_LIABILITY_PARTNERSHIP
+                - GENERAL_PARTNERSHIP
+                - SOLE_PROPRIETORSHIP
+                - PRIVATE_LIMITED_COMPANY
+                - PUBLIC_LIMITED_COMPANY
+                - TRUST
+                - OTHER
+            companyRole:
+                description: Role of person. Allowed Values
+                type: string
+                enum:
+                - OWNER
+                - DIRECTOR
+                - OTHER
+            descriptionOfBusiness:
+                description: Sector / field of activity
+                type: string
+            webpage:
+                description: Business webpage
+                type: string
+            avatar:
+                type: string
+                description: Link to person avatar image
+            occupation:
+                type: string
+                description: Person occupation
+            primaryAddress:
+                type: integer
+                description: Address object id
+    UpdateProfilePayload:
+        type: object
+        properties: &UpdateProfilePayload
+            details:
+                $ref: "#/definitions/Error"
+    CreateProfilePayload:
+        type: object
+        properties: &CreateProfilePayload
+            <<: *UpdateProfilePayload
+            type:
+                type: string
+                enum:
+                - PERSONAL
+                - BUSINESS
+    Profile:
+        type: object
+        properties:
+            <<: *IdentifiableViaLong
+            <<: *CreateProfilePayload
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: "Error code"
+            message:
+                description: "Human readable error message"
+                type: string
+            arguments:
+                description: "Error arguments"
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+        required:
+        - "errors"
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"

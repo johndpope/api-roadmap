@@ -1,0 +1,399 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2 - Quotes"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: quotes
+  description: Quotes
+
+paths:
+    /profiles/{profileId}/quotes:
+        post:
+            tags:
+            - quotes
+            summary: Creates a new quote
+            operationId: create-quote
+            consumes:
+            - application/json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - in: body
+              name: quote
+              description: Quote creation payload
+              required: true
+              schema:
+                  $ref: '#/definitions/CreateQuotePayload'
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: false
+              type: string
+              default: UTC
+            responses:
+                200:
+                    description: Successfuly created quote
+                    schema:
+                        $ref: "#/definitions/Quote"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Quote cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+    '/profiles/{profileId}/quotes/{id}':
+        get:
+            tags:
+            - quotes
+            summary: Retrieves a profile scoped quote by its id
+            operationId: show-quote
+            consumes:
+            - application/json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: Resource id (quote)
+              required: true
+              type: string
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: true
+              type: string
+              default: UTC
+            responses:
+                '200':
+                    description: Successful request
+                    schema:
+                        $ref: '#/definitions/Quote'
+                '400':
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+                '404':
+                    description: Not Found
+                '422':
+                    description: Quote cannot be created due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        patch:
+            tags:
+            - quotes
+            summary: Updates quote partially
+            operationId: updateQuoteUsingPATCH
+            consumes:
+            - application/merge-patch+json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: Resource id (quote)
+              required: true
+              type: string
+            - in: body
+              name: quote
+              description: updateQuote
+              required: false
+              schema:
+                  $ref: '#/definitions/UpdateQuotePayload'
+            - name: quoteId
+              in: path
+              description: quoteId
+              required: true
+              type: string
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: true
+              type: string
+              default: UTC
+            - name: User-Agent
+              in: header
+              description: User-Agent
+              required: false
+              type: string
+            responses:
+                200:
+                    description: Successfuly created quote
+                    schema:
+                        $ref: "#/definitions/Quote"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Quote cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+
+definitions:
+    UpdateQuotePayload:
+        type: object
+        required:
+        - discountCode
+        - guaranteedTargetAmount
+        - payOut
+        - payOutCountry
+        - preferredPayIn
+        - profile
+        - referralCode
+        - sourceAmount
+        - targetAccount
+        - targetAmount
+        properties: &UpdateQuotePayload
+            sourceCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: ISO 4217 upper case currency code
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: ISO 4217 upper case currency code
+            sourceAmount:
+                type: number
+            targetAmount:
+                type: number
+            guaranteedTargetAmount:
+                type: boolean
+            preferredPayIn:
+                type: string
+            payOut:
+                type: string
+            payOutCountry:
+                type: string
+            discountCode:
+                type: string
+            referralCode:
+                type: string
+            targetAccount:
+                type: integer
+                format: int64
+
+    CreateQuotePayload:
+        type: object
+        required:
+        - discountCode
+        - guaranteedTargetAmount
+        - payInCountry
+        - payOut
+        - payOutCountry
+        - preferredPayIn
+        - profile
+        - referralCode
+        - sourceAmount
+        - sourceCurrency
+        - targetAccount
+        - targetAmount
+        - targetCurrency
+        properties: &CreateQuotePayload
+            <<: *UpdateQuotePayload
+            profile:
+                type: integer
+                format: int64
+            payInCountry:
+                type: string
+
+    PaymentOptionResponse:
+        type: object
+        properties:
+            allowedProfileTypes:
+                type: array
+                items:
+                    type: string
+                    enum:
+                    - PERSONAL
+                    - BUSINESS
+            disabled:
+                type: boolean
+            disabledReason:
+                $ref: '#/definitions/Error'
+            estimatedDelivery:
+                type: string
+                format: date-time
+                description: ISO 8601 date time
+                example: "2019-02-21T13:30:00Z"
+            estimatedDeliveryDelays:
+                type: array
+                items:
+                    $ref: '#/definitions/EstimatedDeliveryDelayResponse'
+            fee:
+                $ref: '#/definitions/FeesResponse'
+            feePercentage:
+                type: number
+            formattedEstimatedDelivery:
+                type: string
+                example: "by Feb 21"
+            payIn:
+                type: string
+            payInProduct:
+                type: string
+            payOut:
+                type: string
+            sourceAmount:
+                type: number
+            sourceCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+            targetAmount:
+                type: number
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+    FeesResponse:
+        type: object
+        properties:
+            discount:
+                type: number
+            payIn:
+                type: number
+            total:
+                type: number
+            transferwise:
+                type: number
+    Quote:
+        type: object
+        properties:
+            <<: *CreateQuotePayload
+            createdTime:
+                type: string
+                description: ISO 8601 date time
+            expirationTime:
+                type: string
+            guaranteedTargetAmountAllowed:
+                type: boolean
+            guaranteedTargetRateFluctuationBuffer:
+                type: number
+            id:
+                type: string
+            notices:
+                type: array
+                items:
+                    $ref: '#/definitions/NoticeResponse'
+            paymentOptions:
+                type: array
+                items:
+                    $ref: '#/definitions/PaymentOptionResponse'
+            providedAmountType:
+                type: string
+                enum:
+                - SOURCE
+                - TARGET
+            rate:
+                type: number
+            rateExpirationTime:
+                type: string
+            rateType:
+                type: string
+                enum:
+                - FLOATING
+                - FIXED
+            status:
+                type: string
+            targetAmountAllowed:
+                type: boolean
+            user:
+                type: integer
+                format: int64
+    EstimatedDeliveryDelayResponse:
+        type: object
+        properties:
+            reason:
+                type: string
+    NoticeResponse:
+        type: object
+        properties:
+            link:
+                type: string
+            text:
+                type: string
+            type:
+                type: string
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: Error code
+            message:
+                description: Human readable error message
+                type: string
+            arguments:
+                description: Error arguments
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"

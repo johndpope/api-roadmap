@@ -1,0 +1,244 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2 - Transfers"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: transfers
+  description: Transfers
+
+paths:
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                TRANSFERS                 |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/profiles/{profileId}/transfers':
+        post:
+            summary: "Create transfer on behalf of the customer account"
+            description: "Creates a new transfer owned by the specified customer profile"
+            operationId: "create-transfer"
+            tags:
+            - transfers
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "profileId"
+              in: "path"
+              description: "The Id of the customer profile that is the owner of the transfer."
+              required: true
+              type: "integer"
+              format: "int64"
+            - name: "body"
+              in: "body"
+              description: "Transfer payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/TransferCreatePayload"
+            responses:
+                200:
+                    description: "Successfully created transfer"
+                    schema:
+                        $ref: "#/definitions/Transfer"
+                400:
+                    description: "Bad Request"
+                    schema:
+                        $ref: "#/definitions/Errors"
+                422:
+                    description: "Unexpected error - unprocessable entity"
+                    schema:
+                        $ref: "#/definitions/Errors"
+        get:
+            summary: "List transfers owned by customer profile"
+            description: "Renders the list of transfers accessible to the current credentials scoped to the specified profile."
+            operationId: "list-transfers"
+            tags:
+            - accounts
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the customer account that the transfers are scoped to."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "List transfers successful response"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Transfer"
+    '/profiles/{profileId}/transfers/{id}':
+        get:
+            summary: "Show transfer with the specified id"
+            description: "Returns the transfer by Id if it exists and it is accessible to the current credentials"
+            operationId: "show-transfer"
+            tags:
+            - accounts
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "profileId"
+              in: "path"
+              description: "The Id of the profile that the transfer account is scoped to."
+              required: true
+              type: "integer"
+              format: "int64"
+            - name: "id"
+              in: "path"
+              description: "The id number of the transfer"
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                '200':
+                    description: "Identified transfer"
+                    schema:
+                        $ref: "#/definitions/Transfer"
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
+definitions:
+    IdentifiableViaLong:
+        type: "object"
+        properties: &IdentifiableViaLong
+            id:
+                type: integer
+                format: int64
+                description: Object id number
+    ProfileScoped:
+        type: object
+        properties: &ProfileScoped
+            profile:
+                type: integer
+                format: int64
+                description: Owning profile identifier
+
+    TransferDetails:
+        type: object
+        properties:
+            reference :
+                type: string
+                description: The transfer reference
+            transferPurpose :
+                description: What is this transfer catering for (its purpose)
+                type: string
+            sourceOfFunds :
+                description: The information about where the wealth comes from
+                type: string
+    TransferCreatePayload:
+        type: object
+        required:
+        - quote
+        - targetAccount
+        properties: &TransferCreatePayload
+            quote:
+                type: string
+                format: uuid
+                description: The quote that is used for this transfer
+            targetAccount:
+                type: integer
+                format: int64
+                description: The beneficiary account id
+            customerTransactionId:
+                type: string
+                format: uuid
+                description: Customer provided unique identifier for the transfer.
+            details:
+                type: object
+                $ref: '#/definitions/TransferDetails'
+                description: Transfer information.
+    Transfer:
+        type: object
+        properties:
+            <<: *IdentifiableViaLong
+            <<: *ProfileScoped
+            <<: *TransferCreatePayload
+            user:
+                type: integer
+                format: int64
+                description: the credentials of the user that has created this transfer.
+            status:
+                type: string
+                description: The current state of the transfer
+            rate:
+                type: number
+                format: double
+                description: The exchange rate value used to convert money when transferring.
+            created:
+                type: string
+                format: date-time
+                description: the timestamp in ISO8601 when the transfer was recorded in our system.
+            hasActiveIssues:
+                type: boolean
+                description: Flag that marks the transfer for  pending issues which stop processing the transfer
+            sourceCurrency:
+                description: Source currency code
+                type: string
+                pattern: '^[A-Z]{3}$'
+            sourceValue:
+                description: Transfer amount in source currency
+                type: number
+                format: double
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: Target currency code
+            targetValue:
+                type: number
+                format: double
+                description: Transfer amount in target currency.
+
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: "Error code"
+            message:
+                description: "Human readable error message"
+                type: string
+            arguments:
+                description: "Error arguments"
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+        required:
+        - "errors"
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"

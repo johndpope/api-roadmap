@@ -1,0 +1,99 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2 - Delivery Estimates"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: delivery-estimates
+  description: Get the latest estimated delivery time for a transfer
+
+paths:
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|             DELIVERY ESTIMATES           |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/delivery-estimates/{transferId}':
+        get:
+            summary: "Get the latest estimated delivery time for a transfer"
+            description: "Get the latest estimated delivery time for a transfer owned by the logged in user"
+            operationId: "get-estimate"
+            tags:
+            - delivery-estimates
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "transferId"
+              in: "path"
+              description: "The ID of the transfer to get an estimate for."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Retrieved estimate"
+                    schema:
+                        $ref: "#/definitions/Delivery-Estimate"
+                404:
+                    description: "Estimate not found or not yet generated"
+                    schema:
+                        $ref: "#/definitions/Errors"
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
+definitions:
+    Delivery-Estimate:
+        type: object
+        properties:
+            estimatedDeliveryDate:
+                type: string
+                format: date-time
+                description: ISO 8601 date time
+                example: "2019-01-25T15:27:04.000+0000"
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: "Error code"
+            message:
+                description: "Human readable error message"
+                type: string
+            arguments:
+                description: "Error arguments"
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+        required:
+        - "errors"
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"
