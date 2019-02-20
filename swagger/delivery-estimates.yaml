@@ -52,7 +52,7 @@ paths:
                     schema:
                         $ref: "#/definitions/Delivery-Estimate"
                 404:
-                    description: "Transfer not found"
+                    description: "Transfer or Estimate not found or not yet generated"
 
 #+------------------------------------------+#
 #|..........................................|#
