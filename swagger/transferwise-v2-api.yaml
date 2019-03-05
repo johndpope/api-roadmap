@@ -1,0 +1,1401 @@
+swagger: "2.0"
+info:
+    description: "TransferWise API V2"
+    version: "2.0.0"
+    title: "Transferwise API"
+    contact:
+        email: "api@transferwise.com"
+host: "api.transferwise.com"
+basePath: "/v2"
+schemes:
+- "https"
+securityDefinitions:
+    BearerToken:
+        type: apiKey
+        name: Authorization
+        in: header
+tags:
+- name: Profiles
+  description: Customer profiles representing a person or business
+- name: Quotes
+  description: A quote for a transfer defining amounts and source/target currencies
+- name: Accounts
+  description: Recipient bank accounts
+- name: Transfers
+  description: Transfers
+- name: Payment References
+  description: The payment reference to include on a payment when funding by bank transfer
+- name: Delivery Estimates
+  description: The estimated delivery time for a transfer
+
+
+paths:
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                TRANSFERS                 |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/profiles/{profileId}/transfers':
+        parameters:
+            - name: "profileId"
+              in: "path"
+              description: "The Id of the customer profile that is the owner of the transfer."
+              required: true
+              type: "integer"
+              format: "int64"
+        post:
+            summary: "Create transfer on behalf of the customer account"
+            description: "Creates a new transfer owned by the specified customer profile"
+            operationId: "create-transfer"
+            tags:
+            - Transfers
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "body"
+              in: "body"
+              description: "Transfer payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/TransferCreatePayload"
+            responses:
+                200:
+                    description: "Successfully created transfer"
+                    schema:
+                        $ref: "#/definitions/Transfer"
+                400:
+                    description: "Bad Request"
+                    schema:
+                        $ref: "#/definitions/Errors"
+                422:
+                    description: "Unexpected error - unprocessable entity"
+                    schema:
+                        $ref: "#/definitions/Errors"
+        get:
+            summary: "List transfers owned by customer profile"
+            description: "Renders the list of transfers accessible to the current credentials scoped to the specified profile."
+            operationId: "list-transfers"
+            tags:
+            - Transfers
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the customer account that the transfers are scoped to."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "List transfers successful response"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Transfer"
+    '/profiles/{profileId}/transfers/{id}':
+        get:
+            summary: "Show transfer with the specified id"
+            description: "Returns the transfer by Id if it exists and it is accessible to the current credentials"
+            operationId: "show-transfer"
+            tags:
+            - Transfers
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "profileId"
+              in: "path"
+              description: "The Id of the profile that the transfer account is scoped to."
+              required: true
+              type: "integer"
+              format: "int64"
+            - name: "id"
+              in: "path"
+              description: "The id number of the transfer"
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                '200':
+                    description: "Identified transfer"
+                    schema:
+                        $ref: "#/definitions/Transfer"
+
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                QUOTES                    |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/profiles/{profileId}/quotes':
+        post:
+            tags:
+            - Quotes
+            summary: Creates a new quote
+            operationId: create-quote
+            consumes:
+            - application/json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - in: body
+              name: quote
+              description: Quote creation payload
+              required: true
+              schema:
+                  $ref: '#/definitions/CreateQuotePayload'
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: false
+              type: string
+              default: UTC
+            responses:
+                200:
+                    description: Successfuly created quote
+                    schema:
+                        $ref: "#/definitions/Quote"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Quote cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+    '/profiles/{profileId}/quotes/{id}':
+        get:
+            tags:
+            - Quotes
+            summary: Retrieves a profile scoped quote by its id
+            operationId: show-quote
+            consumes:
+            - application/json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: Resource id (quote)
+              required: true
+              type: string
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: true
+              type: string
+              default: UTC
+            responses:
+                '200':
+                    description: Successful request
+                    schema:
+                        $ref: '#/definitions/Quote'
+                '400':
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+                '404':
+                    description: Not Found
+                '422':
+                    description: Quote cannot be created due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        patch:
+            tags:
+            - Quotes
+            summary: Updates quote partially
+            operationId: updateQuoteUsingPATCH
+            consumes:
+            - application/merge-patch+json
+            produces:
+            - application/json
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              description: The id of the customer profile
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: Resource id (quote)
+              required: true
+              type: string
+            - in: body
+              name: quote
+              description: updateQuote
+              required: false
+              schema:
+                  $ref: '#/definitions/UpdateQuotePayload'
+            - name: quoteId
+              in: path
+              description: quoteId
+              required: true
+              type: string
+            - name: Time-Zone
+              in: header
+              description: Time-Zone
+              required: true
+              type: string
+              default: UTC
+            - name: User-Agent
+              in: header
+              description: User-Agent
+              required: false
+              type: string
+            responses:
+                200:
+                    description: Successfuly created quote
+                    schema:
+                        $ref: "#/definitions/Quote"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Quote cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                 PROFILES                 |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/profiles/':
+        post:
+            summary: "Create new profile"
+            description: "|
+        Creates a new profile. One can have many business profiles but only one personal profile."
+            operationId: "create-profile"
+            tags:
+            - Profiles
+            consumes:
+            - "application/json; version=2"
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "body"
+              in: "body"
+              description: "Profile payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/CreateProfilePayload"
+            responses:
+                200:
+                    description: "Profile created"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        get:
+            summary: "List accessible profiles"
+            description: "Returns the list of profiles accessible to the current user."
+            operationId: "list-profiles"
+            tags:
+            - Profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            responses:
+                200:
+                    description: "Accessible profiles"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Profile"
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+    '/profiles/{id}':
+        get:
+            summary: "Show profile"
+            description: "Returns the profile with the specified Id if it exists and it is accessible to the current user"
+            operationId: "show-profile"
+            tags:
+            - Profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the profile."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Identified Profile"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+        patch:
+            summary: "Update profile"
+            description: "Updates the profile with the specified Id with the allowed data."
+            operationId: "update-profile"
+            tags:
+            - Profiles
+            produces:
+            - "application/json; version=2"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "id"
+              in: "path"
+              description: "The Id of the profile."
+              required: true
+              type: "integer"
+              format: "int64"
+            - name: "body"
+              in: "body"
+              description: "Update profile payload"
+              required: true
+              schema:
+                  $ref: "#/definitions/UpdateProfilePayload"
+            responses:
+                200:
+                    description: "Identified Profile"
+                    schema:
+                        $ref: "#/definitions/Profile"
+                400:
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                401:
+                    description: Unauthorized - User needs to authenticate before accessing this URI
+                403:
+                    description: Forbidden - User can read this resource but cannot modify it
+                404:
+                    description: Not found - The resource cannot be found
+                410:
+                    description: Resource has been expired and cannot be used anymore
+                    schema:
+                        $ref: '#/definitions/Errors'
+                422:
+                    description: Resource cannot be created or modified due to business rule violations
+                    schema:
+                        $ref: '#/definitions/Errors'
+    
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|             PAYMENT REFERENCES           |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/payment-references/':
+        get:
+            summary: "The payment reference to include on a payment when funding by bank transfer"
+            description: "Get the payment refernece to include on a payment when funding by bank transfer. Can be used for funding different types of resources, for example an individual transfer or in future a batch of transfers."
+            operationId: "get-payment-references"
+            tags:
+            - Payment References
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "resourceType"
+              in: "query"
+              description: "The type of resource to get payment references for. Currently only supports transfers."
+              required: true
+              type: string
+              enum:
+                - transfer
+            - name: "resourceId"
+              in: "query"
+              description: "The ID of the resource to get payment refernces for, should represent a resource of type `resourceType`"
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Payment reference options"
+                    schema:
+                        type: array
+                        items:
+                            $ref: "#/definitions/Payment-Reference"
+
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                ACCOUNTS                  |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/account-types': #BOOKMARK
+        get:
+            tags:
+            - Accounts
+            summary: Lists all available beneficiary account type names
+            operationId: list-account-types
+            produces:
+            - application/json;charset=UTF-8
+            responses:
+                '200':
+                    description: OK
+                    schema:
+                        type: array
+                        items:
+                            type: string
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+                '404':
+                    description: Not Found
+    '/profiles/{profileId}/accounts':
+        get:
+            tags:
+            - Accounts
+            summary: Search v2 account by given criteria
+            operationId: search-or-list
+            produces:
+            - application/json;charset=UTF-8
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              required: true
+              type: integer
+              format: int64
+            - name: currency
+              in: query
+              required: false
+              type: array
+              items:
+                  type: string
+              collectionFormat: multi
+            - name: type
+              in: query
+              required: false
+              type: array
+              items:
+                  type: string
+              collectionFormat: multi
+            - name: creatorId
+              in: query
+              required: false
+              type: integer
+              format: int64
+            - name: active
+              in: query
+              required: false
+              type: boolean
+            - name: unreserved
+              in: query
+              required: false
+              type: boolean
+            - name: fullName
+              in: query
+              required: false
+              type: string
+            - name: ownedByCustomer
+              in: query
+              required: false
+              type: boolean
+            responses:
+                '200':
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Page'
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+                '404':
+                    description: Profile Not Found
+        post:
+            tags:
+            - Accounts
+            summary: Creates beneficiary account
+            operationId: create-account
+            consumes:
+            - application/json
+            produces:
+            - application/json;charset=UTF-8
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              required: true
+              type: integer
+              format: int64
+            - in: body
+              name: account
+              description: account
+              required: true
+              schema:
+                  $ref: '#/definitions/CreateAccountPayload'
+            responses:
+                '200':
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Account'
+                '201':
+                    description: Created
+                '400':
+                    description: Client input errors
+                    schema:
+                        $ref: '#/definitions/Errors'
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+    '/profiles/{profileId}/accounts/{id}':
+        get:
+            tags:
+            - Accounts
+            summary: Return v2 account by id for public consumers
+            operationId: show-account
+            produces:
+            - application/json;charset=UTF-8
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: id
+              required: true
+              type: integer
+              format: int64
+            responses:
+                '200':
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Account'
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+                '404':
+                    description: Not Found
+        delete:
+            tags:
+            - Accounts
+            summary: Remove beneficiary account with given id
+            operationId: delete-account
+            produces:
+            - application/json;charset=UTF-8
+            security:
+            - BearerToken: []
+            parameters:
+            - name: profileId
+              in: path
+              required: true
+              type: integer
+              format: int64
+            - name: id
+              in: path
+              description: id
+              required: true
+              type: integer
+              format: int64
+            responses:
+                '200':
+                    description: OK
+                    schema:
+                        $ref: '#/definitions/Account'
+                '204':
+                    description: No Content
+                '401':
+                    description: Unauthorized
+                '403':
+                    description: Forbidden
+
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|             DELIVERY ESTIMATES           |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/delivery-estimates/{transferId}':
+        get:
+            summary: "Get the latest estimated delivery time for a transfer"
+            description: "Get the latest estimated delivery time for a transfer owned by the logged in user"
+            operationId: "get-estimate"
+            tags:
+            - Delivery Estimates
+            consumes:
+            - "application/json"
+            produces:
+            - "application/json"
+            security:
+            - BearerToken: []
+            parameters:
+            - name: "transferId"
+              in: "path"
+              description: "The ID of the transfer to get an estimate for."
+              required: true
+              type: "integer"
+              format: "int64"
+            responses:
+                200:
+                    description: "Retrieved estimate"
+                    schema:
+                        $ref: "#/definitions/Delivery-Estimate"
+                404:
+                    description: "Transfer or Estimate not found or not yet generated"
+
+
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
+definitions:
+    IdentifiableViaLong:
+        type: "object"
+        properties: &IdentifiableViaLong
+            id:
+                type: integer
+                format: int64
+                description: Object id number
+    ProfileScoped:
+        type: object
+        properties: &ProfileScoped
+            profile:
+                type: integer
+                format: int64
+                description: Owning profile identifier
+
+    TransferDetails:
+        type: object
+        properties:
+            reference :
+                type: string
+                description: The transfer reference
+            transferPurpose :
+                description: What is this transfer catering for (its purpose)
+                type: string
+            sourceOfFunds :
+                description: The information about where the wealth comes from
+                type: string
+    TransferCreatePayload:
+        type: object
+        required:
+        - quote
+        - targetAccount
+        properties: &TransferCreatePayload
+            quote:
+                type: string
+                format: uuid
+                description: The quote that is used for this transfer
+            targetAccount:
+                type: integer
+                format: int64
+                description: The beneficiary account id
+            customerTransactionId:
+                type: string
+                format: uuid
+                description: Customer provided unique identifier for the transfer.
+            details:
+                type: object
+                $ref: '#/definitions/TransferDetails'
+                description: Transfer information.
+    Transfer:
+        type: object
+        properties:
+            <<: *IdentifiableViaLong
+            <<: *ProfileScoped
+            <<: *TransferCreatePayload
+            user:
+                type: integer
+                format: int64
+                description: the credentials of the user that has created this transfer.
+            status:
+                type: string
+                description: The current state of the transfer
+            rate:
+                type: number
+                format: double
+                description: The exchange rate value used to convert money when transferring.
+            created:
+                type: string
+                format: date-time
+                description: the timestamp in ISO8601 when the transfer was recorded in our system.
+            hasActiveIssues:
+                type: boolean
+                description: Flag that marks the transfer for  pending issues which stop processing the transfer
+            sourceCurrency:
+                description: Source currency code
+                type: string
+                pattern: '^[A-Z]{3}$'
+            sourceValue:
+                description: Transfer amount in source currency
+                type: number
+                format: double
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: Target currency code
+            targetValue:
+                type: number
+                format: double
+                description: Transfer amount in target currency.
+    UpdateQuotePayload:
+        type: object
+        required:
+        - discountCode
+        - guaranteedTargetAmount
+        - payOut
+        - payOutCountry
+        - preferredPayIn
+        - profile
+        - referralCode
+        - sourceAmount
+        - targetAccount
+        - targetAmount
+        properties: &UpdateQuotePayload
+            sourceCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: ISO 4217 upper case currency code
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+                description: ISO 4217 upper case currency code
+            sourceAmount:
+                type: number
+            targetAmount:
+                type: number
+            guaranteedTargetAmount:
+                type: boolean
+            preferredPayIn:
+                type: string
+            payOut:
+                type: string
+            payOutCountry:
+                type: string
+            discountCode:
+                type: string
+            referralCode:
+                type: string
+            targetAccount:
+                type: integer
+                format: int64
+
+    CreateQuotePayload:
+        type: object
+        required:
+        - discountCode
+        - guaranteedTargetAmount
+        - payInCountry
+        - payOut
+        - payOutCountry
+        - preferredPayIn
+        - profile
+        - referralCode
+        - sourceAmount
+        - sourceCurrency
+        - targetAccount
+        - targetAmount
+        - targetCurrency
+        properties: &CreateQuotePayload
+            <<: *UpdateQuotePayload
+            profile:
+                type: integer
+                format: int64
+            payInCountry:
+                type: string
+
+    PaymentOptionResponse:
+        type: object
+        properties:
+            allowedProfileTypes:
+                type: array
+                items:
+                    type: string
+                    enum:
+                    - PERSONAL
+                    - BUSINESS
+            disabled:
+                type: boolean
+            disabledReason:
+                $ref: '#/definitions/Error'
+            estimatedDelivery:
+                type: string
+                format: date-time
+                description: ISO 8601 date time
+                example: "2019-02-21T13:30:00Z"
+            estimatedDeliveryDelays:
+                type: array
+                items:
+                    $ref: '#/definitions/EstimatedDeliveryDelayResponse'
+            fee:
+                $ref: '#/definitions/FeesResponse'
+            feePercentage:
+                type: number
+            formattedEstimatedDelivery:
+                type: string
+                example: "by Feb 21"
+            payIn:
+                type: string
+            payInProduct:
+                type: string
+            payOut:
+                type: string
+            sourceAmount:
+                type: number
+            sourceCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+            targetAmount:
+                type: number
+            targetCurrency:
+                type: string
+                pattern: '^[A-Z]{3}$'
+    FeesResponse:
+        type: object
+        properties:
+            discount:
+                type: number
+            payIn:
+                type: number
+            total:
+                type: number
+            transferwise:
+                type: number
+    Quote:
+        type: object
+        properties:
+            <<: *CreateQuotePayload
+            createdTime:
+                type: string
+                description: ISO 8601 date time
+            expirationTime:
+                type: string
+            guaranteedTargetAmountAllowed:
+                type: boolean
+            guaranteedTargetRateFluctuationBuffer:
+                type: number
+            id:
+                type: string
+            notices:
+                type: array
+                items:
+                    $ref: '#/definitions/NoticeResponse'
+            paymentOptions:
+                type: array
+                items:
+                    $ref: '#/definitions/PaymentOptionResponse'
+            providedAmountType:
+                type: string
+                enum:
+                - SOURCE
+                - TARGET
+            rate:
+                type: number
+            rateExpirationTime:
+                type: string
+            rateType:
+                type: string
+                enum:
+                - FLOATING
+                - FIXED
+            status:
+                type: string
+            targetAmountAllowed:
+                type: boolean
+            user:
+                type: integer
+                format: int64
+    EstimatedDeliveryDelayResponse:
+        type: object
+        properties:
+            reason:
+                type: string
+    NoticeResponse:
+        type: object
+        properties:
+            link:
+                type: string
+            text:
+                type: string
+            type:
+                type: string
+    Name:
+        type: object
+        properties:
+            familyName:
+                type: string
+            fullName:
+                type: string
+            givenName:
+                type: string
+            middleNames:
+                type: array
+                items:
+                    type: string
+            patronymicName:
+                type: string
+    Details:
+        type: object
+        properties:
+            firstName:
+                type: string
+                description: First name of the customer
+            lastName:
+                type: string
+                description: Last name of the customer
+            dateOfBirth:
+                type: string
+                format: date
+                description: Customer's date of birth
+            phoneNumber:
+                type: string
+                description: Phone number
+            name:
+                description: Business name
+                type: string
+            registrationNumber:
+                description: Business registration number
+                type: string
+            acn:
+                description: Australian Company Number (only for AUS businesses)
+                type: string
+            abn:
+                description: Australian Business Nnumber (only for AUS businesses)
+                type: string
+            arbn:
+                description: Australian Registered Body Number (only for AUS businesses)
+                type: string
+            companyType:
+                description: Company legal form
+                type: string
+                enum:
+                - LIMITED
+                - PARTNERSHIP
+                - SOLE_TRADER
+                - LIMITED_BY_GUARANTEE
+                - LIMITED_LIABILITY_COMPANY
+                - FOR_PROFIT_CORPORATION
+                - NON_PROFIT_CORPORATION
+                - LIMITED_PARTNERSHIP
+                - LIMITED_LIABILITY_PARTNERSHIP
+                - GENERAL_PARTNERSHIP
+                - SOLE_PROPRIETORSHIP
+                - PRIVATE_LIMITED_COMPANY
+                - PUBLIC_LIMITED_COMPANY
+                - TRUST
+                - OTHER
+            companyRole:
+                description: Role of person. Allowed Values
+                type: string
+                enum:
+                - OWNER
+                - DIRECTOR
+                - OTHER
+            descriptionOfBusiness:
+                description: Sector / field of activity
+                type: string
+            webpage:
+                description: Business webpage
+                type: string
+            avatar:
+                type: string
+                description: Link to person avatar image
+            occupation:
+                type: string
+                description: Person occupation
+            primaryAddress:
+                type: integer
+                description: Address object id
+    UpdateProfilePayload:
+        type: object
+        properties: &UpdateProfilePayload
+            details:
+                $ref: "#/definitions/Error"
+    CreateProfilePayload:
+        type: object
+        properties: &CreateProfilePayload
+            <<: *UpdateProfilePayload
+            type:
+                type: string
+                enum:
+                - PERSONAL
+                - BUSINESS
+    Profile:
+        type: object
+        properties:
+            <<: *IdentifiableViaLong
+            <<: *CreateProfilePayload
+
+    Payment-Reference:
+        type: object
+        properties:
+            strategyName:
+              type: string
+              enum:
+              - user
+              - profile
+              - transfer
+              description: Unique key to refer to this payment refernece strategy. Used when the client knows exactly the strategy they wish to use.
+            accuracy:
+              type: integer
+              format: int64
+              description: The accuracy of the payment reference. Where a client sends payments programtically they should always select the most accurate method.
+              example: 100
+            reference:
+              type: string
+              description: The payment reference to send on the bank transfer.
+              example: "P123456"
+
+    Delivery-Estimate:
+        type: object
+        properties:
+            estimatedDeliveryDate:
+                type: string
+                format: date-time
+                description: ISO 8601 date time
+                example: "2019-01-25T15:27:04.000+0000"
+
+    CreateAccountPayload:
+        type: object
+        title: CreateAccountPayload
+        properties: &CreateAccountPayload
+            accountSummary:
+                type: string
+            active:
+                type: boolean
+            address:
+                $ref: '#/definitions/Address'
+            bankDetails:
+                $ref: '#/definitions/BankDetails'
+            commonFieldMap:
+                $ref: '#/definitions/CommonFieldMap'
+            country:
+                type: string
+            creatorId:
+                type: integer
+                format: int64
+            currency:
+                type: string
+            dateOfBirth:
+                type: string
+                format: date
+            details:
+                type: object
+                additionalProperties:
+                    type: string
+            email:
+                type: string
+            hash:
+                type: string
+            id:
+                type: integer
+                format: int64
+            legalEntityType:
+                type: string
+                enum:
+                - PERSON
+                - INSTITUTION
+            name:
+                $ref: '#/definitions/Name'
+            ownedByCustomer:
+                type: boolean
+            payoutChannel:
+                type: string
+                enum:
+                - BALANCE
+                - SWIFT
+                - BANK_TRANSFER
+            twAccount:
+                type: boolean
+            type:
+                type: string
+    Account:
+        type: object
+        title: Account
+        properties:
+            <<: *CreateAccountPayload
+            profileId:
+                type: integer
+                format: int64
+    Address:
+        type: object
+        properties:
+            city:
+                type: string
+            country:
+                type: string
+            firstLine:
+                type: string
+            postCode:
+                type: string
+            state:
+                type: string
+        title: Address
+    BankDetails:
+        type: object
+        properties:
+            bankCode:
+                type: string
+            bic:
+                type: string
+            branchAddress:
+                $ref: '#/definitions/Address'
+            country:
+                type: string
+            metadata:
+                $ref: '#/definitions/BankDetailsMetadata'
+            name:
+                type: string
+            shortName:
+                type: string
+            usedInRecipient:
+                type: boolean
+            usedInternally:
+                type: boolean
+        title: BankDetails
+    BankDetailsMetadata:
+        type: object
+        properties:
+            accountNumberValidationRegExp:
+                type: string
+            clearingHouses:
+                type: array
+                items:
+                    type: string
+            inrTransferTypes:
+                type: array
+                items:
+                    type: string
+            instantWhitelist:
+                type: boolean
+            lkrDefaultBranchCode:
+                type: string
+            moneywaveBankCode:
+                type: string
+            skipInWorldpay:
+                type: boolean
+            supportedByBarclays:
+                type: boolean
+            supportedByInstaDebit:
+                type: boolean
+            unionpayValidationRules:
+                $ref: '#/definitions/ChineseCardPrefixes'
+            wsftsBankCode:
+                type: string
+        title: BankDetailsMetadata
+    ChineseCardPrefixes:
+        type: object
+        properties:
+            prefixes:
+                type: array
+                items:
+                    type: string
+        title: ChineseCardPrefixes
+    CommonFieldMap:
+        type: object
+        properties:
+            accountNumberField:
+                type: string
+            bankCodeField:
+                type: string
+            bicField:
+                type: string
+            branchCodeField:
+                type: string
+        title: CommonFieldMap
+    Page:
+        type: object
+        properties:
+            content:
+                type: array
+                items:
+                    type: object
+            first:
+                type: boolean
+            last:
+                type: boolean
+            number:
+                type: integer
+                format: int32
+            numberOfElements:
+                type: integer
+                format: int32
+            pageable:
+                $ref: '#/definitions/Pageable'
+            size:
+                type: integer
+                format: int32
+            sort:
+                $ref: '#/definitions/Sort'
+            totalElements:
+                type: integer
+                format: int64
+            totalPages:
+                type: integer
+                format: int32
+        title: Page
+    Pageable:
+        type: object
+        properties:
+            offset:
+                type: integer
+                format: int64
+            pageNumber:
+                type: integer
+                format: int32
+            pageSize:
+                type: integer
+                format: int32
+            paged:
+                type: boolean
+            sort:
+                $ref: '#/definitions/Sort'
+            unpaged:
+                type: boolean
+        title: Pageable
+    Sort:
+        type: object
+        properties:
+            sorted:
+                type: boolean
+            unsorted:
+                type: boolean
+        title: Sort
+
+    Error:
+        type: object
+        properties:
+            code:
+                type: string
+                description: "Error code"
+            message:
+                description: "Human readable error message"
+                type: string
+            arguments:
+                description: "Error arguments"
+                type: array
+                items:
+                    type: string
+            path:
+                type: string
+    Errors:
+        type: object
+        required:
+        - "errors"
+        properties:
+            errors:
+                type: array
+                items:
+                    $ref: "#/definitions/Error"

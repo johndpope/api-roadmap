@@ -20,7 +20,14 @@ tags:
   description: Beneficiary Accounts
 
 paths:
-    /account-types: #BOOKMARK
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    #|                                          |#
+    #|                ACCOUNTS                  |#
+    #|                                          |#
+    #+------------------------------------------+#
+    #+------------------------------------------+#
+    '/account-types': #BOOKMARK
         get:
             tags:
             - accounts
@@ -41,7 +48,7 @@ paths:
                     description: Forbidden
                 '404':
                     description: Not Found
-    /profiles/{profileId}/accounts:
+    '/profiles/{profileId}/accounts':
         get:
             tags:
             - accounts
@@ -206,6 +213,14 @@ paths:
                     description: Unauthorized
                 '403':
                     description: Forbidden
+
+#+------------------------------------------+#
+#|..........................................|#
+#|                                          |#
+#|               DEFINITIONS                |#
+#|                                          |#
+#|..........................................|#
+#+------------------------------------------+#
 definitions:
     CreateAccountPayload:
         type: object

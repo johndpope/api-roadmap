@@ -15,8 +15,8 @@ securityDefinitions:
         name: Authorization
         in: header
 tags:
-- name: transfers
-  description: Transfers
+- name: Transfers
+  description: A user's transfer for a given profile
 
 paths:
     #+------------------------------------------+#
@@ -27,12 +27,19 @@ paths:
     #+------------------------------------------+#
     #+------------------------------------------+#
     '/profiles/{profileId}/transfers':
+        parameters:
+            - name: "profileId"
+              in: "path"
+              description: "The Id of the customer profile that is the owner of the transfer."
+              required: true
+              type: "integer"
+              format: "int64"
         post:
             summary: "Create transfer on behalf of the customer account"
             description: "Creates a new transfer owned by the specified customer profile"
             operationId: "create-transfer"
             tags:
-            - transfers
+            - Transfers
             consumes:
             - "application/json"
             produces:
@@ -40,12 +47,6 @@ paths:
             security:
             - BearerToken: []
             parameters:
-            - name: "profileId"
-              in: "path"
-              description: "The Id of the customer profile that is the owner of the transfer."
-              required: true
-              type: "integer"
-              format: "int64"
             - name: "body"
               in: "body"
               description: "Transfer payload"
@@ -70,7 +71,7 @@ paths:
             description: "Renders the list of transfers accessible to the current credentials scoped to the specified profile."
             operationId: "list-transfers"
             tags:
-            - accounts
+            - Transfers
             produces:
             - "application/json"
             security:
@@ -95,7 +96,7 @@ paths:
             description: "Returns the transfer by Id if it exists and it is accessible to the current credentials"
             operationId: "show-transfer"
             tags:
-            - accounts
+            - Transfers
             produces:
             - "application/json"
             security:
