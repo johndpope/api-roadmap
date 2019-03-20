@@ -16,7 +16,7 @@ securityDefinitions:
         in: header
 
 tags:
-- name: accounts
+- name: Accounts
   description: Beneficiary Accounts
 
 paths:
@@ -30,7 +30,7 @@ paths:
     '/account-types': #BOOKMARK
         get:
             tags:
-            - accounts
+            - Accounts
             summary: Lists all available beneficiary account type names
             operationId: list-account-types
             produces:
@@ -51,7 +51,7 @@ paths:
     '/profiles/{profileId}/accounts':
         get:
             tags:
-            - accounts
+            - Accounts
             summary: Search v2 account by given criteria
             operationId: search-or-list
             produces:
@@ -112,7 +112,7 @@ paths:
                     description: Profile Not Found
         post:
             tags:
-            - accounts
+            - Accounts
             summary: Creates beneficiary account
             operationId: create-account
             consumes:
@@ -151,7 +151,7 @@ paths:
     '/profiles/{profileId}/accounts/{id}':
         get:
             tags:
-            - accounts
+            - Accounts
             summary: Return v2 account by id for public consumers
             operationId: show-account
             produces:
@@ -183,7 +183,7 @@ paths:
                     description: Not Found
         delete:
             tags:
-            - accounts
+            - Accounts
             summary: Remove beneficiary account with given id
             operationId: delete-account
             produces:
@@ -216,7 +216,7 @@ paths:
     '/profiles/{profileId}/quotes/{quoteId}/account-requirements':
         get:
             tags:
-            - accounts
+            - Accounts
             summary: Get the structure of the form to render on a client to allow a user to create a recipient account for this quote
             description: This endpoint will return a JSON Schema response containing a JSON object that describes the components of a form to be rendered in order to collect recipient details for submission to `POST /profiles/{profileId}/accounts`. The object will aways contain one field which has three potential fiels - `allOf`, `oneOf` or `type`. The first two will contain arrays of other objects of the same format as these. An object with a `type` field should be handled according to the type defined there. Please see the trandferwise API v2 documentation for exampeles of this response and how to render a form using it.
             operationId: get-account-details
@@ -248,7 +248,7 @@ paths:
                     description: Not Found
         post:
             tags:
-            - accounts
+            - Accounts
             summary: Post a partially completed form to get the full contents of the form to show the user.
             description: Post a partially completed form as defined by the fields required in `GET /profiles/{profileId}/quotes/{quoteId}/account-requirements`. Designed to allow submission of data where fields in the recipient creation form are multi-level or dependent on each other, e.g. Country -> State. The response is the same JSON schema format as returned by the `GET` endpoint but with potentially more form fields defined in the response.
             operationId: post-account-details
